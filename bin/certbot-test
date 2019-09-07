@@ -1,0 +1,83 @@
+#!/bin/sh
+
+set -e
+
+# Add curl.
+apk add curl
+
+# Tell challtestsrv to send queries for sut.example.com to here.
+curl -X POST -d '{"host":"sut.example.com", "addresses":["10.30.50.4"]}' http://10.30.50.3:8055/add-a
+
+# Letsencrypt pebble is configured with a certificate with a CN of localhost.  So, we must contact it
+# via localhost, so hack the /etc/hosts file to point to it. 
+
+echo "10.30.50.2 localhost"  >temp
+cat  /etc/hosts             >>temp
+
+sed -i \
+ -e 's/^127.0.0.1/#127.0.0.1/' \
+ -e 's/^::1/#::1/' \
+ temp
+
+cat temp
+
+cat temp >/etc/hosts
+
+# Do a registration.
+if certbot register -m admin@example.com --agree-tos --no-eff-email \
+    --server https://localhost:14000/dir --no-verify-ssl; then
+  echo "Registration succeeded!"
+else
+  echo "Error: Registration failed!"
+  exit 2
+fi
+
+# Create a new certificate.
+if certbot certonly --non-interactive --keep-until-expiring \
+    --standalone --email admin@example.com --agree-tos -d sut.example.com \
+    --server https://localhost:14000/dir --no-verify-ssl --http-01-port 5002; then
+  echo "Certificate creation succeeded!"
+else
+  echo "Error: Certificate creation failed!"
+  exit 3
+fi
+
+if [ ! -e "/etc/letsencrypt/live/sut.example.com/fullchain.pem" ]; then
+  echo "Error: File /etc/letsencrypt/live/sut.example.com/fullchain.pem not found!"
+  exit 4
+fi
+
+if [ ! -e "/etc/letsencrypt/live/sut.example.com/privkey.pem" ]; then
+  echo "Error: File /etc/letsencrypt/live/sut.example.com/privkey.pem not found!"
+  exit 5
+fi
+
+# Now run a modified cronjob to verify the the renewal process is working.
+cat >/etc/crontabs/root <<-__EOF__
+	# min							hour	day	month	weekday	command
+	0,3,6,9,12,15,18,21,24,27,30,33,36,39,42,45,48,51,54,57	*	*	*	*	python3 -c 'import random; import time; time.sleep(random.random() * 10)' && certbot renew && touch /etc/itworked
+	__EOF__
+
+/usr/sbin/crond
+
+# Wait up to five minutes for file to show up.
+sleep 15
+status="failed"
+for try in $(seq -s ' ' 1 5) ; do
+  if [ -e /etc/itworked ]; then
+    status="ok"
+    break
+  fi
+  echo "Waiting for cron job..."
+  sleep 60
+done
+
+if [ "$status" != "ok" ]; then
+  echo "Error: The certbot renew cron jon failed to run!"
+  exit 6
+else
+  echo "Certbot renew ran sucessfully!"
+fi
+
+exit 0
+
