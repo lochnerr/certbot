@@ -22,11 +22,8 @@ VOLUME [ "/etc/letsencrypt", "/var/log/letsencrypt" ]
 # Add the certbot package.
 RUN apk add --update --no-cache certbot
 
-# Create the crontab to run the certbot renewal.
-RUN  \
- && echo "# Run certbot renewal twice daily between 1am and 2am and between 1pm and 2pm." >/etc/crontabs/root \
- && echo "# min	hour	day	month	weekday	command" >>/etc/crontabs/root \
- && echo "0	1,13	*	*	*	python3 -c 'import random; import time; time.sleep(random.random() * 3600)' && certbot renew" >>/etc/crontabs/root
+# Copy the crontab to run the certbot renewal.
+COPY crontab /etc/crontabs/root
 
 # Copy the unit test script.
 COPY bin/certbot-test /usr/local/bin
