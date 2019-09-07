@@ -1,7 +1,7 @@
 # Certbot Renewal Container in Docker on Alpine #
 
 This repository contains the Dockerfile and associated assets for
-building a Certbot Renewal Server in Docker on Alpine Linux.
+building a Certbot Renewal Container in Docker on Alpine Linux.
 
 This container simply runs a cron daemon in the foreground which
 executes a Certbot renew twice each day.
