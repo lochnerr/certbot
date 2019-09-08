@@ -68,7 +68,8 @@ sudo docker run -it --rm \
     -d $SERVER --dry-run
 ```
 
-You then can run the container daemon to perform the renewals with:
+You then can run the container daemon to perform the renewals with the following. A port (-p 80:80) 
+directive is only required if standalone mode was used to create the certificate(s).  
 ```bash
 sudo docker run -d --rm -p 80:80 \
   -v /etc/letsencrypt:/etc/letsencrypt \
