@@ -42,14 +42,12 @@ sudo docker run -it --rm \
 
 To create an initial certificate in standalone mode, you can run something like the following.
 ```bash
-EMAIL="user@yourdomain.com"
 SERVER="www.yourdomain.com"
 sudo docker run -it --rm -p 80:80 \
   -v /etc/letsencrypt:/etc/letsencrypt \
   -v /var/log/letsencrypt/log:/var/log/letsencrypt \
   lochnerr/certbot /usr/bin/certbot certonly --non-interactive --keep-until-expiring \
     --standalone \
-    --email $EMAIL --agree-tos \
     --rsa-key-size 4096 --must-staple --staple-ocsp --redirect --hsts --uir \
     -d $SERVER --dry-run
 ```
@@ -59,15 +57,13 @@ certificates.
 
 To create an initial certificate in webroot mode, you can run something like the following.
 ```bash
-EMAIL="user@yourdomain.com"
 SERVER="www.yourdomain.com"
-sudo docker run -it --rm -p 80:80 \
+sudo docker run -it --rm \
   -v /etc/letsencrypt:/etc/letsencrypt \
   -v /var/log/letsencrypt/log:/var/log/letsencrypt \
   -v /usr/share/nginx/html:/usr/share/nginx/html \
   lochnerr/certbot /usr/bin/certbot certonly --non-interactive --keep-until-expiring \
     --webroot --webroot-path /usr/share/nginx/html \
-    --email $EMAIL --agree-tos \
     --rsa-key-size 4096 --must-staple --staple-ocsp --redirect --hsts --uir \
     -d $SERVER --dry-run
 ```
