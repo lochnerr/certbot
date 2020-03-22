@@ -21,36 +21,32 @@ docker build -t certbot .
 
 ### Running the container ###
 
-Create directory for the certbot data:
+Variables used in the examples:
 ```bash
-mkdir $(pwd)/certs
+LEDIR="$(pwd)/letsencrypt"
+SERVER="www.example.com"
 ```
 
-If desired, create a directory for the log files:
+Create directory for the certbot data:
 ```bash
-mkdir $(pwd)/log
+sudo mkdir -p $LEDIR
 ```
 
 If using certbot for the first time, you can register with something like the following command.
 ```bash
-EMAIL="user@yourdomain.com"
+EMAIL="webmaster@example.com"
 sudo docker run -it --rm \
-  -v $(pwd)/certs:/etc/letsencrypt \
-  -v $(pwd)/log:/var/log/letsencrypt \
+  -v $LEDIR:/etc/letsencrypt \
   certbot /usr/bin/certbot register -m $EMAIL --agree-tos --no-eff-email
 ```
 
 To create an initial certificate in standalone mode, you can run something like the following.
 ```bash
 # Add a site in standalone mode.
-EMAIL="user@yourdomain.com"
-SERVER="www.yourdomain.com"
 sudo docker run -it --rm -p 80:80 \
-  -v $(pwd)/certs:/etc/letsencrypt \
-  -v $(pwd)/log:/var/log/letsencrypt \
+  -v $LEDIR:/etc/letsencrypt \
   certbot /usr/bin/certbot certonly --non-interactive --keep-until-expiring \
     --standalone \
-    --email $EMAIL --agree-tos \
     --rsa-key-size 4096 --must-staple --staple-ocsp --redirect --hsts --uir \
     -d $SERVER --dry-run
 ```
@@ -60,16 +56,12 @@ certificates.
 
 To create an initial certificate in webroot mode, you can run something like the following.
 ```bash
-# Add a site in standalone mode.
-EMAIL="user@yourdomain.com"
-SERVER="www.yourdomain.com"
+# Add a site in webroot mode.
 sudo docker run -it --rm -p 80:80 \
-  -v $(pwd)/certs:/etc/letsencrypt \
-  -v $(pwd)/log:/var/log/letsencrypt \
+  -v $LEDIR:/etc/letsencrypt \
   -v /usr/share/nginx/html:/usr/share/nginx/html \
   certbot /usr/bin/certbot certonly --non-interactive --keep-until-expiring \
     --webroot --webroot-path /usr/share/nginx/html \
-    --email $EMAIL --agree-tos \
     --rsa-key-size 4096 --must-staple --staple-ocsp --redirect --hsts --uir \
     -d $SERVER --dry-run
 ```
@@ -77,9 +69,8 @@ sudo docker run -it --rm -p 80:80 \
 You then can run the container with:
 ```bash
 # Run certbot renewal container.
-sudo docker run -it --rm -p 80:80 \
-  -v $(pwd)/certs:/etc/letsencrypt \
-  -v $(pwd)/log:/var/log/letsencrypt \
+sudo docker run -d --rm -p 80:80 \
+  -v $LEDIR:/etc/letsencrypt \
   -v /usr/share/nginx/html:/usr/share/nginx/html \
   certbot
 ```
