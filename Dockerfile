@@ -10,6 +10,8 @@ LABEL MAINTAINER Richard Lochner, Clone Research Corp. <lochner@clone1.com> \
 
 # A simple certbot container.
 #
+# Force build with Alpine 3.12 and certbot 1.4.0.
+#
 # Volumes:
 #  * /etc/letsencrypt - directory for certbot data files.
 #  * /var/log/letsencrypt - directory for certbot log files.
